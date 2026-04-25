@@ -28,5 +28,8 @@
   },
   "devDependencies": {
     "mocha": "^11.7.5"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0"
   }
 }

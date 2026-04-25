@@ -9,7 +9,7 @@ if (!command || command === "--help" || command === "-h") {
 
 const commands = {
     create: () => require("../lib/create")(args),
-    serve: () => require("../lib/server")(args),
+    serve: () => require("../lib/watcher")(args),
     test: () => require("../lib/test")(args),
 };
 
