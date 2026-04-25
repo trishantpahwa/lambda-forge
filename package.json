@@ -19,7 +19,10 @@
   "license": "Apache-2.0",
   "author": "Trishant Pahwa <trishantpahwa@gmail.com>",
   "type": "commonjs",
-  "main": "bin/index.js",
+  "main": "lib/index.js",
+  "bin": {
+    "forge": "./bin/index.js"
+  },
   "scripts": {
     "test": "mocha"
   },
