@@ -1,0 +1,29 @@
+{
+  "name": "lambda-forge",
+  "version": "1.0.0",
+  "description": "A framework to develop microservices using AWS Lambda.",
+  "keywords": [
+    "Lambda",
+    "Microservices",
+    "Backend",
+    "AWS"
+  ],
+  "homepage": "https://github.com/trishantpahwa/lambda-forge#readme",
+  "bugs": {
+    "url": "https://github.com/trishantpahwa/lambda-forge/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trishantpahwa/lambda-forge.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Trishant Pahwa <trishantpahwa@gmail.com>",
+  "type": "commonjs",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "mocha": "^11.7.5"
+  }
+}
