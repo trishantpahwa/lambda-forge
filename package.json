@@ -30,6 +30,10 @@
     "mocha": "^11.7.5"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.1037.0",
+    "@aws-sdk/client-iam": "^3.1037.0",
+    "@aws-sdk/client-lambda": "^3.1037.0",
+    "archiver": "^7.0.1",
     "chokidar": "^5.0.0"
   }
 }

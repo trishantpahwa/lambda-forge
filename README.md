@@ -41,6 +41,7 @@ Scaffold, develop locally, and deploy — without ever touching a config file.
 - [CLI Reference](#cli-reference)
 - [Router API](#router-api)
 - [Deploying to AWS Lambda](#deploying-to-aws-lambda)
+- [Debugging](#debugging)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -334,25 +335,39 @@ module.exports = { paginate };
 
 ## CLI Reference
 
-```
-Usage: forge <command> [options]
-
-Commands:
-  create         Create a new lambda-forge project
-  serve          Start local development server
-  test           Run project tests with Mocha
-
-Options for serve:
-  --port <port>  Base port (default: 3000, each app gets the next port)
-```
-
 | Command | Description |
 |---------|-------------|
 | `forge create` | Interactively scaffold a new project |
 | `forge serve` | Start each app on its own port from 3000 |
 | `forge serve --port 8000` | Start from a custom base port (`8000`, `8001`, …) |
-| `PORT=8000 forge serve` | Alternatively set the base port via env variable |
 | `forge test` | Run the project test suite with Mocha |
+| `forge deploy` | Deploy all apps to AWS Lambda |
+| `forge logs <app>` | Fetch recent CloudWatch logs for a deployed app |
+| `forge logs <app> --tail` | Follow logs in real time (polls every 2 s) |
+| `forge invoke <app>` | Invoke a deployed function and print the response |
+| `forge invoke <app> --data '<json>'` | Invoke with a custom event payload |
+
+**Shared options for `deploy`, `logs`, and `invoke`:**
+
+```
+--access-key <key>    AWS access key ID
+--secret-key <secret> AWS secret access key
+--region <region>     AWS region (default: us-east-1)
+```
+
+**Additional `logs` options:**
+
+```
+--tail, -f            Follow — poll for new entries every 2 s
+--since <minutes>     How far back to look (default: 60)
+--filter <pattern>    Only show lines matching this pattern
+```
+
+**Additional `invoke` options:**
+
+```
+--data <json>         Event payload (default: minimal GET / API Gateway v2 event)
+```
 
 ---
 
@@ -401,86 +416,197 @@ router.get('/users/:id/posts/:postId', (req, res) => {
 
 ## Deploying to AWS Lambda
 
-Each app in `apps/` is designed to become its own Lambda function. To deploy:
+Each app scaffolded by `forge create` already includes a `handler.js` ready for Lambda. The `forge deploy` command zips each app and creates or updates its Lambda function automatically.
 
-**1. Add `serverless-http` to your project**
+### Quick deploy
 
 ```bash
-npm install serverless-http
+# Uses ~/.aws/credentials (default AWS profile)
+forge deploy
+
+# Explicit credentials
+forge deploy --access-key AKIA... --secret-key wJal... --region us-east-1
+
+# Bring your own IAM execution role
+forge deploy --role arn:aws:iam::123456789012:role/my-role
 ```
 
-**2. Create a handler file for each app**
+```
+  Deploying to AWS Lambda  region: us-east-1
+
+  Resolving IAM execution role... done
+
+  users                    created
+  orders                   created
+  products                 updated
+
+  Done
+```
+
+### How it works
+
+| Step | What happens |
+|------|-------------|
+| IAM role | Finds or creates `lambda-forge-execution-role` with `AWSLambdaBasicExecutionRole` (skip with `--role`) |
+| Zip | Bundles `apps/<name>/`, `commons/`, and `node_modules/` into a deployment package |
+| Create | Calls `CreateFunction` if the function does not exist |
+| Update | Calls `UpdateFunctionCode` if the function already exists |
+
+### Credential resolution order
+
+1. `--access-key` / `--secret-key` CLI flags
+2. `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` environment variables
+3. `~/.aws/credentials` — default AWS profile
+
+### Lambda handler file
+
+`forge create` generates `apps/<name>/handler.js` automatically:
 
 ```js
-// apps/users/handler.js
-const serverless = require('serverless-http');
-const http = require('http');
+const { createHandler } = require('lambda-forge');
 const router = require('./routes');
 
-const server = http.createServer((req, res) => {
-    router.handle(req, res);
-});
-
-module.exports.handler = serverless(server);
+module.exports.handler = createHandler(router);
 ```
 
-> Full Lambda adapter support is on the roadmap. In the meantime, `serverless-http` wraps any Node.js HTTP app for API Gateway with minimal setup.
+`createHandler` supports both API Gateway payload formats (v1 REST API and v2 HTTP API) with no extra dependencies.
 
-**3. Configure your deployment tool**
+### Function naming
 
-lambda-forge is compatible with any AWS deployment tool:
+Functions are named `<project-name>-<app-name>`, matching the `name` field in your `package.json`.
+
+```
+my-api/apps/users    →   Lambda: my-api-users
+my-api/apps/orders   →   Lambda: my-api-orders
+```
+
+### Permissions needed to deploy
+
+The AWS credentials used must have the following permissions:
 
 <details>
-<summary>AWS SAM</summary>
+<summary>Minimum IAM policy</summary>
 
-```yaml
-# template.yaml
-Resources:
-  UsersFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apps/users/handler.handler
-      Runtime: nodejs20.x
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /users/{proxy+}
-            Method: ANY
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LambdaDeployment",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunctionUrlConfig",
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:AddPermission",
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:*"
+    },
+    {
+      "Sid": "IAMRoleManagement",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:PassRole"
+      ],
+      "Resource": "arn:aws:iam::*:role/lambda-forge-*"
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:FilterLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/*"
+    }
+  ]
+}
 ```
+
+| Permission | Why it's needed |
+|---|---|
+| `lambda:GetFunction` | Check whether a function exists before create vs. update |
+| `lambda:CreateFunction` | Create a new Lambda function on first deploy |
+| `lambda:UpdateFunctionCode` | Upload a new zip to an existing function |
+| `lambda:UpdateFunctionConfiguration` | Correct the handler reference on existing functions |
+| `lambda:GetFunctionUrlConfig` | Check whether a Function URL already exists |
+| `lambda:CreateFunctionUrlConfig` | Create a public HTTPS Function URL after deploy |
+| `lambda:AddPermission` | Grant public `InvokeFunctionUrl` access to the Function URL |
+| `lambda:InvokeFunction` | Invoke a deployed function via `forge invoke` |
+| `iam:GetRole` | Look up the `lambda-forge-execution-role` before trying to create it |
+| `iam:CreateRole` | Create the execution role when it doesn't exist |
+| `iam:AttachRolePolicy` | Attach `AWSLambdaBasicExecutionRole` to the created role |
+| `iam:PassRole` | Required by AWS when `CreateFunction` assigns a role to a function |
+| `logs:FilterLogEvents` | Read CloudWatch log events via `forge logs` |
+
+> If you supply your own role via `--role <arn>`, the three `iam:*` actions are not needed.  
+> Scope the `IAMRoleManagement` statement to that specific ARN to follow least-privilege.
 
 </details>
 
-<details>
-<summary>Serverless Framework</summary>
+---
 
-```yaml
-# serverless.yml
-functions:
-  users:
-    handler: apps/users/handler.handler
-    events:
-      - http:
-          path: /users/{proxy+}
-          method: ANY
+## Debugging
+
+### View CloudWatch logs
+
+```bash
+# Last 60 minutes of logs
+forge logs users
+
+# Follow in real time
+forge logs users --tail
+
+# Last 10 minutes, errors only
+forge logs users --since 10 --filter ERROR
 ```
 
-</details>
+```
+  my-api-users  (following)
 
-<details>
-<summary>AWS CDK</summary>
+  2026-04-26T11:02:01.000Z  START RequestId: abc-123 Version: $LATEST
+  2026-04-26T11:02:01.005Z  2026-04-26T11:02:01.005Z GET /
+  2026-04-26T11:02:01.008Z  END RequestId: abc-123
+  2026-04-26T11:02:01.009Z  REPORT RequestId: abc-123 Duration: 3.21 ms Billed Duration: 4 ms ...
 
-```js
-// lib/stack.js
-const { NodejsFunction } = require('aws-cdk-lib/aws-lambda-nodejs');
-
-new NodejsFunction(this, 'UsersFunction', {
-    entry: 'apps/users/handler.js',
-    handler: 'handler',
-});
+  Watching for new logs... (Ctrl+C to stop)
 ```
 
-</details>
+### Invoke a deployed function
+
+```bash
+# Default GET / event (API Gateway v2 format)
+forge invoke users
+
+# Custom event payload
+forge invoke users --data '{"version":"2.0","rawPath":"/","requestContext":{"http":{"method":"POST"}},"body":"{\"name\":\"Alice\"}"}'
+```
+
+```
+  Invoking my-api-users
+
+  Status   200
+
+  Response
+    {
+      "statusCode": 200,
+      "headers": { "content-type": "application/json" },
+      "body": { "message": "Hello from lambda-forge!" },
+      "isBase64Encoded": false
+    }
+
+  Execution logs
+    START RequestId: abc-123 Version: $LATEST
+    2026-04-26T11:02:01.005Z GET /
+    END RequestId: abc-123
+    REPORT RequestId: abc-123 Duration: 3.21 ms Billed Duration: 4 ms Memory Size: 256 MB Max Memory Used: 64 MB
+```
 
 ---
 
