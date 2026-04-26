@@ -1,20 +1,20 @@
 ```
-  _                 _         _           __
- | |               | |       | |         / _|
- | | __ _ _ __ ___ | |__   __| | __ _   | |_ ___  _ __ __ _  ___
- | |/ _` | '_ ` _ \| '_ \ / _` |/ _` |  |  _/ _ \| '__/ _` |/ _ \
- | | (_| | | | | | | |_) | (_| | (_| |  | || (_) | | | (_| |  __/
- |_|\__,_|_| |_| |_|_.__/ \__,_|\__,_|  |_| \___/|_|  \__, |\___|
-                                                         __/ |
-                                                        |___/
+  _                 _         _                               
+ | |               | |       | |                             
+ | | __ _ _ __ ___ | |__   __| | __ _      _ __  _ __ ___  ___ ___ 
+ | |/ _` | '_ ` _ \| '_ \ / _` |/ _` |    | '_ \| '__/ _ \/ __/ __|
+ | | (_| | | | | | | |_) | (_| | (_| |    | |_) | | |  __/\__ \__ \
+ |_|\__,_|_| |_| |_|_.__/ \__,_|\__,_|    | .__/|_|  \___||___/___/
+                                           | |
+                                           |_|
 ```
 
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/lambda-forge.svg?style=flat-square)](https://www.npmjs.com/package/lambda-forge)
+[![npm version](https://img.shields.io/npm/v/lambda-press.svg?style=flat-square)](https://www.npmjs.com/package/lambda-press)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/trishantpahwa/lambda-forge/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/trishantpahwa/lambda-press/pulls)
 
 **A zero-dependency framework for building microservices on AWS Lambda.**  
 Scaffold, develop locally, and deploy — without ever touching a config file.
@@ -27,7 +27,7 @@ Scaffold, develop locally, and deploy — without ever touching a config file.
 
 ## Table of Contents
 
-- [What is lambda-forge?](#what-is-lambda-forge)
+- [What is lambda-press?](#what-is-lambda-press)
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
@@ -49,14 +49,14 @@ Scaffold, develop locally, and deploy — without ever touching a config file.
 
 ---
 
-## What is lambda-forge?
+## What is lambda-press?
 
-lambda-forge is a lightweight CLI and runtime framework for building microservices meant to run on **AWS Lambda**. Each "app" in your project maps to a single Lambda function — independently deployable, independently scalable.
+lambda-press is a lightweight CLI and runtime framework for building microservices meant to run on **AWS Lambda**. Each "app" in your project maps to a single Lambda function — independently deployable, independently scalable.
 
 The local development server mirrors the Lambda routing behaviour exactly, so what works on your machine works in the cloud.
 
 ```
-forge create          →   scaffold a new project in seconds
+press create          →   scaffold a new project in seconds
 npm start             →   local server with live reload on file change
 npm run deploy        →   ship each app as its own Lambda function
 ```
@@ -67,12 +67,12 @@ No Express. No bloat. Zero runtime dependencies on Lambda.
 
 ## Features
 
-- **CLI scaffolding** — interactive `forge create` generates a full project in one command
+- **CLI scaffolding** — interactive `press create` generates a full project in one command
 - **Per-app Lambda functions** — each app directory becomes an independent microservice
 - **Built-in Router** — HTTP routing with named params, multi-level paths, and middleware chains
-- **Live reload** — `forge serve` watches `apps/` and `commons/` and restarts on any file change
+- **Live reload** — `press serve` watches `apps/` and `commons/` and restarts on any file change
 - **Per-app isolated servers** — each app runs on its own port, mirroring Lambda's isolated runtime
-- **Built-in test runner** — `forge test` runs your Mocha test suite without any extra config
+- **Built-in test runner** — `press test` runs your Mocha test suite without any extra config
 - **Zero Lambda runtime dependencies** — the framework itself is bundled into the deployment zip
 - **Convention over configuration** — predictable file layout, no config files required
 
@@ -83,13 +83,13 @@ No Express. No bloat. Zero runtime dependencies on Lambda.
 Install the CLI globally:
 
 ```bash
-npm install -g lambda-forge
+npm install -g lambda-press
 ```
 
 Verify the install:
 
 ```bash
-forge --help
+press --help
 ```
 
 ---
@@ -99,11 +99,11 @@ forge --help
 **1. Create a new project**
 
 ```bash
-forge create
+press create
 ```
 
 ```
-  Welcome to lambda-forge!
+  Welcome to lambda-press!
 
   Project name: my-api
   First app name: users
@@ -120,11 +120,11 @@ npm install
 
 ```bash
 npm start
-# or: forge serve
+# or: press serve
 ```
 
 ```
-  lambda-forge local server running
+  lambda-press local server running
 
     users                http://localhost:3000
 ```
@@ -133,7 +133,7 @@ npm start
 
 ```bash
 curl http://localhost:3000/
-# {"message":"Hello from lambda-forge!"}
+# {"message":"Hello from lambda-press!"}
 ```
 
 Each app runs on its own port — add more apps under `apps/` and they'll each get the next port automatically (`3001`, `3002`, …). The server watches for file changes and restarts automatically.
@@ -177,7 +177,7 @@ apps/
 `apps/<name>/routes.js` is the entry point for an app. Register routes on a `Router` instance and export it.
 
 ```js
-const { Router } = require('lambda-forge');
+const { Router } = require('lambda-press');
 const controllers = require('./controllers');
 const { logger } = require('./middleware');
 
@@ -334,10 +334,10 @@ module.exports = { findAll, findById };
 
 ### Handler
 
-`apps/<name>/handler.js` is the Lambda entry point. `forge create` generates it automatically — you rarely need to touch it.
+`apps/<name>/handler.js` is the Lambda entry point. `press create` generates it automatically — you rarely need to touch it.
 
 ```js
-const { createHandler } = require('lambda-forge');
+const { createHandler } = require('lambda-press');
 const router = require('./routes');
 
 module.exports.handler = createHandler(router);
@@ -379,15 +379,15 @@ module.exports = { paginate };
 
 | Command | Description |
 |---------|-------------|
-| `forge create` | Interactively scaffold a new project |
-| `forge serve` | Start each app on its own port from 3000, with live reload |
-| `forge serve --port 8000` | Start from a custom base port (`8000`, `8001`, …) |
-| `forge test` | Run the project test suite with Mocha |
-| `forge deploy` | Deploy all apps to AWS Lambda |
-| `forge logs <app>` | Fetch recent CloudWatch logs for a deployed app |
-| `forge logs <app> --tail` | Follow logs in real time (polls every 2 s) |
-| `forge invoke <app>` | Invoke a deployed function and print the response |
-| `forge invoke <app> --data '<json>'` | Invoke with a custom event payload |
+| `press create` | Interactively scaffold a new project |
+| `press serve` | Start each app on its own port from 3000, with live reload |
+| `press serve --port 8000` | Start from a custom base port (`8000`, `8001`, …) |
+| `press test` | Run the project test suite with Mocha |
+| `press deploy` | Deploy all apps to AWS Lambda |
+| `press logs <app>` | Fetch recent CloudWatch logs for a deployed app |
+| `press logs <app> --tail` | Follow logs in real time (polls every 2 s) |
+| `press invoke <app>` | Invoke a deployed function and print the response |
+| `press invoke <app> --data '<json>'` | Invoke with a custom event payload |
 
 **Shared options for `deploy`, `logs`, and `invoke`:**
 
@@ -427,10 +427,10 @@ module.exports = { paginate };
 
 ## Router API
 
-`lambda-forge` exports two values:
+`lambda-press` exports two values:
 
 ```js
-const { Router, createHandler } = require('lambda-forge');
+const { Router, createHandler } = require('lambda-press');
 ```
 
 ### Route registration
@@ -538,19 +538,19 @@ res.status(200).type('text/plain').send('OK');
 
 ## Deploying to AWS Lambda
 
-Each app scaffolded by `forge create` already includes a `handler.js` ready for Lambda. The `forge deploy` command zips each app and creates or updates its Lambda function automatically.
+Each app scaffolded by `press create` already includes a `handler.js` ready for Lambda. The `press deploy` command zips each app and creates or updates its Lambda function automatically.
 
 ### Quick deploy
 
 ```bash
 # Uses ~/.aws/credentials (default AWS profile)
-forge deploy
+press deploy
 
 # Explicit credentials
-forge deploy --access-key AKIA... --secret-key wJal... --region ap-south-1
+press deploy --access-key AKIA... --secret-key wJal... --region ap-south-1
 
 # Bring your own IAM execution role
-forge deploy --role arn:aws:iam::123456789012:role/my-role
+press deploy --role arn:aws:iam::123456789012:role/my-role
 ```
 
 ```
@@ -570,7 +570,7 @@ forge deploy --role arn:aws:iam::123456789012:role/my-role
 
 | Step | What happens |
 |------|-------------|
-| IAM role | Finds or creates `lambda-forge-execution-role` with `AWSLambdaBasicExecutionRole` (skip with `--role`) |
+| IAM role | Finds or creates `lambda-press-execution-role` with `AWSLambdaBasicExecutionRole` (skip with `--role`) |
 | Zip | Bundles `apps/<name>/`, `commons/`, framework runtime, and `node_modules/` |
 | Create | Calls `CreateFunction` if the function does not exist, then waits until active |
 | Update | Calls `UpdateFunctionCode` then waits until ready before applying config changes |
@@ -626,7 +626,7 @@ The AWS credentials used must have the following permissions:
         "iam:AttachRolePolicy",
         "iam:PassRole"
       ],
-      "Resource": "arn:aws:iam::*:role/lambda-forge-*"
+      "Resource": "arn:aws:iam::*:role/lambda-press-*"
     },
     {
       "Sid": "CloudWatchLogs",
@@ -649,12 +649,12 @@ The AWS credentials used must have the following permissions:
 | `lambda:GetFunctionUrlConfig` | Check whether a Function URL already exists |
 | `lambda:CreateFunctionUrlConfig` | Create a public HTTPS Function URL after deploy |
 | `lambda:AddPermission` | Grant public `InvokeFunctionUrl` access to the Function URL |
-| `lambda:InvokeFunction` | Invoke a deployed function via `forge invoke` |
-| `iam:GetRole` | Look up the `lambda-forge-execution-role` before trying to create it |
+| `lambda:InvokeFunction` | Invoke a deployed function via `press invoke` |
+| `iam:GetRole` | Look up the `lambda-press-execution-role` before trying to create it |
 | `iam:CreateRole` | Create the execution role when it doesn't exist |
 | `iam:AttachRolePolicy` | Attach `AWSLambdaBasicExecutionRole` to the created role |
 | `iam:PassRole` | Required by AWS when `CreateFunction` assigns a role to a function |
-| `logs:FilterLogEvents` | Read CloudWatch log events via `forge logs` |
+| `logs:FilterLogEvents` | Read CloudWatch log events via `press logs` |
 
 > If you supply your own role via `--role <arn>`, the three `iam:*` actions are not needed.  
 > Scope the `IAMRoleManagement` statement to that specific ARN to follow least-privilege.
@@ -669,13 +669,13 @@ The AWS credentials used must have the following permissions:
 
 ```bash
 # Last 60 minutes of logs
-forge logs users
+press logs users
 
 # Follow in real time
-forge logs users --tail
+press logs users --tail
 
 # Last 10 minutes, errors only
-forge logs users --since 10 --filter ERROR
+press logs users --since 10 --filter ERROR
 ```
 
 ```
@@ -693,10 +693,10 @@ forge logs users --since 10 --filter ERROR
 
 ```bash
 # Default GET / event (API Gateway v2 format)
-forge invoke users
+press invoke users
 
 # Custom event payload
-forge invoke users --data '{"version":"2.0","rawPath":"/users/42","requestContext":{"http":{"method":"GET"}},"body":null}'
+press invoke users --data '{"version":"2.0","rawPath":"/users/42","requestContext":{"http":{"method":"GET"}},"body":null}'
 ```
 
 ```
@@ -708,7 +708,7 @@ forge invoke users --data '{"version":"2.0","rawPath":"/users/42","requestContex
     {
       "statusCode": 200,
       "headers": { "content-type": "application/json" },
-      "body": { "message": "Hello from lambda-forge!" },
+      "body": { "message": "Hello from lambda-press!" },
       "isBase64Encoded": false
     }
 
@@ -727,8 +727,8 @@ Contributions are welcome.
 
 ```bash
 # clone
-git clone https://github.com/trishantpahwa/lambda-forge.git
-cd lambda-forge
+git clone https://github.com/trishantpahwa/lambda-press.git
+cd lambda-press
 
 # install dev dependencies
 npm install

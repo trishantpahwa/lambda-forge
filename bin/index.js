@@ -25,11 +25,11 @@ if (commands[command]) {
 }
 
 function printHelp() {
-    console.log("\n  lambda-forge\n");
-    console.log("  Usage: forge <command> [options]\n");
+    console.log("\n  lambda-press\n");
+    console.log("  Usage: press <command> [options]\n");
 
     console.log("  Commands:");
-    console.log("    create                   Create a new lambda-forge project");
+    console.log("    create                   Create a new lambda-press project");
     console.log("    serve                    Start local development server");
     console.log("    test                     Run project tests with Mocha");
     console.log("    deploy                   Deploy apps to AWS Lambda");

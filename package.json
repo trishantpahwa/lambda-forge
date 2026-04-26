@@ -1,6 +1,6 @@
 {
-  "name": "lambda-forge",
-  "version": "1.0.2",
+  "name": "lambda-press",
+  "version": "1.1.0",
   "description": "A framework to develop microservices using AWS Lambda.",
   "keywords": [
     "Lambda",
@@ -8,20 +8,25 @@
     "Backend",
     "AWS"
   ],
-  "homepage": "https://github.com/trishantpahwa/lambda-forge#readme",
+  "homepage": "https://github.com/trishantpahwa/lambda-press#readme",
   "bugs": {
-    "url": "https://github.com/trishantpahwa/lambda-forge/issues"
+    "url": "https://github.com/trishantpahwa/lambda-press/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trishantpahwa/lambda-forge.git"
+    "url": "git+https://github.com/trishantpahwa/lambda-press.git"
   },
   "license": "Apache-2.0",
   "author": "Trishant Pahwa <trishantpahwa@gmail.com>",
   "type": "commonjs",
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
   "main": "lib/index.js",
   "bin": {
-    "forge": "./bin/index.js"
+    "press": "bin/index.js"
   },
   "scripts": {
     "test": "mocha"
